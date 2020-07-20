@@ -25,6 +25,20 @@ const studentAvatars = document.getElementsByClassName('avatar'); //studentAvata
 const studentEmails = document.getElementsByClassName('email');//studentEmails[0].textContent
 const studentJoinDates = document.getElementsByClassName('date');//studentJoinDates[0].textContent
 let pageIndexes = [];
+let pagesNeeded = 0;
+
+const header = document.getElementsByClassName('page-header cf')[0];
+const searchBar = document.createElement('input');
+searchBar.addEventListener("onkeydown", filterList);
+searchBar.className = "student-search";
+const searchButton = document.createElement('button');
+searchButton.textContent = "Search";
+searchButton.className = "student-search";
+searchButton.addEventListener("click", filterList);
+
+header.appendChild(searchButton);
+header.appendChild(searchBar);
+
 
 //store all student data into an array of student objects
 for(let i = 0; i < students_liElements.length; i++){
@@ -40,24 +54,17 @@ for(let i = 0; i < students_liElements.length; i++){
     allStudents.push(student);
 }
 
-console.log("---students: " + allStudents[0].name);
-console.log("---students: " + allStudents[0].avatar);
-console.log("---students: " + allStudents[0].email);
-console.log("---students: " + allStudents[0].joinDate);
+//console.log("---students: " + allStudents[0].name);
+//console.log("---students: " + allStudents[0].avatar);
+//console.log("---students: " + allStudents[0].email);
+//console.log("---students: " + allStudents[0].joinDate);
 
-let specialStudents = [allStudents[0], allStudents[1], allStudents[3]];
-
-function organizeByPage(studentList){
+function organizePages(studentList, maxPerPage){
     let length = studentList.length;
-    let pagesNeeded = Math.ceil(length / maxStudentsPerPage);
-    let pageIndex = 0;
-    for(let i=0; i < pagesNeeded; i++){
-        pageIndexes.push(pageIndex);
-        console.log(`Creating index for page ${i}: ${pageIndex}`);
-        pageIndex += maxStudentsPerPage;
-    }
+    pagesNeeded = Math.ceil(length / maxPerPage);
+    appendPageLinks(maxPerPage);
 }
-organizeByPage(allStudents);
+organizePages(allStudents, maxStudentsPerPage);
 
 /*** 
    Create the `showPage` function to hide all of the items in the 
@@ -78,25 +85,56 @@ function showPage(students, page){
     for(let i = 0; i < students.length; i++){
         if(students.indexOf(students[i]) >= pageIndexes[page] && students.indexOf(students[i]) < (pageIndexes[page]+maxStudentsPerPage)){
             students[i].show();
-            console.log(students[i].name);
         }else{
             students[i].hide();
         }
-        
+    }
+    //highlight the button that corresponds with the page you're on
+    let linkList = document.querySelector('.pagination');
+    let links = linkList.querySelectorAll('li > a');
+    for(let i = 0; i < links.length; i++){
+        if(i == page){
+            links[i].style.border = "1px solid firebrick";
+        }else{
+            links[i].style.border = "1px solid #eaeaea";
+        }
+    }
+    console.log("---LINKS: " + links.length);
+}
+
+function filterList(){
+    console.log("FILTERING for " + searchBar.value + " length: " + searchBar.value.length);
+    let students = allStudents;
+    let query = searchBar.value;
+    for(let i = 0; i < students.length; i++){
+        if(students[i].name.startsWith(searchBar.value)){
+            students[i].show();
+        }else{
+            students[i].hide();
+        }
     }
 }
-//showPage(allStudents, 0);
-
-
 
 /*** 
    Create the `appendPageLinks function` to generate, append, and add 
    functionality to the pagination buttons.
 ***/
-function appendPageLinks(){
-//add buttons after the page div's <ul> element
-
-
+function appendPageLinks(maxPerPage){
+    //add page links after the page div's <ul> element
+    //create the unordered list for the links
+    let pageLinks = document.createElement('ul');
+    pageLinks.className = 'pagination';
+    let pageIndex = 0;
+    for(let i=0; i < pagesNeeded; i++){
+        //add current index to the pageIndexes array, then increment by max 
+        pageIndexes.push(pageIndex);
+        pageIndex += maxPerPage;
+        let pageLink = document.createElement('li');
+        pageLink.innerHTML = `<a>Page ${i+1}</a>`;
+        pageLink.addEventListener("click", (e) =>{console.log("click " + i); showPage(allStudents, i);});
+        pageLinks.appendChild(pageLink);
+    }
+    document.getElementsByClassName('student-list')[0].appendChild(pageLinks);
 }
 
-// Remember to delete the comments that came with this file, and replace them with your own code comments.
+showPage(allStudents, 0)
