@@ -4,7 +4,7 @@ FSJS project 2 - List Filter and Pagination
 ******************************************/
 
 //limits results to display per page
-const maxStudentsPerPage = 10;
+let maxStudentsPerPage = 10;
 //array that stores student objects
 const allStudents = [];
 //stores the indexes of the first element on each page - used to know when to stop displaying results
@@ -38,13 +38,71 @@ const searchButton = document.createElement('button');
 searchButton.textContent = "Search";
 searchButton.className = "student-search";
 searchButton.addEventListener("click", filterList);
+const formElement = document.createElement('form');
+formElement.className = "student-search";
+formElement.addEventListener('click', (e) => {
+    console.log(e.target.id);
+    if(e.target.id == 'max5' || e.target.id == 'max10' || e.target.id == 'max20'){
+        let val = parseInt(e.target.value);
+        switch(val){
+            case 5:
+                resultMax10.checked = false;
+                resultMax20.checked = false;
+                break;
+            case 10:
+                resultMax5.checked = false;
+                resultMax20.checked = false;
+                break;
+            case 20:
+                resultMax5.checked = false;
+                resultMax10.checked = false;
+                break;
+        };
+        maxStudentsPerPage = val;
+        showPage(allStudents, 0);
+    }
+})
+const formlabel = document.createElement('label');
+formlabel.textContent = "Results Per Page:";
+const resultMax5 = document.createElement('input');
+const resultMax5_label = document.createElement('label');
+resultMax5_label.textContent = "5";
+resultMax5_label.for = "max5";
+resultMax5.type = 'radio';
+resultMax5.value = '5';
+resultMax5.id = "max5";
+const resultMax10 = document.createElement('input');
+const resultMax10_label = document.createElement('label');
+resultMax10_label.textContent = "10";
+resultMax10_label.for = "max10";
+resultMax10.type = 'radio';
+resultMax10.value = '10';
+resultMax10.id = "max10";
+resultMax10.checked = true;
+const resultMax20 = document.createElement('input');
+const resultMax20_label = document.createElement('label');
+resultMax20_label.textContent = "20";
+resultMax20_label.for = "max20";
+resultMax20.type = 'radio';
+resultMax20.value = '20';
+resultMax20.id = "max20";
+formElement.appendChild(formlabel);
+formElement.appendChild(resultMax5);
+formElement.appendChild(resultMax5_label);
+formElement.appendChild(resultMax10);
+formElement.appendChild(resultMax10_label);
+formElement.appendChild(resultMax20);
+formElement.appendChild(resultMax20_label);
 
 header.appendChild(searchButton);
 header.appendChild(searchBar);
+header.appendChild(formElement);
+
 
 
 //store all student data into an array of student objects
 for(let i = 0; i < students_liElements.length; i++){
+    //ok, some of this isn't used - was thinking about adding more filtering options like email or join date
     let student = {
         name: studentNames[i].textContent,
         avatar: studentAvatars[i].src,
@@ -57,15 +115,12 @@ for(let i = 0; i < students_liElements.length; i++){
     allStudents.push(student);
 }
 
-function organizePages(studentList, maxPerPage){
-    let length = studentList.length;
-    pagesNeeded = Math.ceil(length / maxPerPage);
-    appendPageLinks(studentList, maxPerPage);
-}
-
 function showPage(students, page){
-    //calls organizePages
-    organizePages(students, maxStudentsPerPage);
+    //organize pages
+    let length = students.length;
+    pagesNeeded = Math.ceil(length / maxStudentsPerPage);
+    appendPageLinks(students, maxStudentsPerPage);
+    
     //the count for students visible should be set to 0 by default, but keep the 'none found' message hidden
     let studentsVisible = 0;
     resultsMsgElement.style.display = 'none';
@@ -79,6 +134,7 @@ function showPage(students, page){
         */
         if(students.indexOf(students[i]) >= pageIndexes[page] && students.indexOf(students[i]) < (pageIndexes[page]+maxStudentsPerPage)){
             students[i].show();
+            //console.log(`${students[i].name} - ${i}`);
             //count how many students are visible
             studentsVisible++;
         }else{
@@ -107,21 +163,17 @@ function filterList(){
     //start with clear array
     let filteredStudentList = [];
     if(query != ''){
-        let studentsVisible = 0;
         let students = allStudents;
         //compare searchbar text with each student's name
         for(let i = 0; i < students.length; i++){
             //if student's name starts with the same letters from the searchbar, show it, else hide it.
             if(students[i].name.startsWith(searchBar.value)){
-                //students[i].show();
                 filteredStudentList.push(students[i]);
-                //count how many students are visible
-                studentsVisible++;
             }else{
                 students[i].hide();
-                console.log("Skipping");
             }
         }
+        //run showPage with the NEW array, not the default array
         showPage(filteredStudentList, 0);
     }else{
         //run showPage with default students list
@@ -130,18 +182,16 @@ function filterList(){
 }
 
 function appendPageLinks(studentList, maxPerPage){
-    
+    //checking if ul pagination links already exist, removing them if they do
     var linkCheck = document.getElementsByClassName('pagination');
     if(linkCheck.length > 0){
-        console.log("---has previous links - removing " + linkCheck);
         pageElement.removeChild(pageLinksElement);
-    }else{
-        console.log("---does NOT have previous links");
     }
-    
+    //create new ul pagination element
     pageLinksElement = document.createElement('ul');
     pageLinksElement.className = 'pagination';
     let pageIndex = 0;
+    pageIndexes = [];
     for(let i=0; i < pagesNeeded; i++){
         //add current index to the pageIndexes array, then increment by max 
         pageIndexes.push(pageIndex);

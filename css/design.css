@@ -43,6 +43,10 @@ body{
       color: #fff
     }
 
+    .page-header .student-search label{
+          margin-right: 10px;
+        }
+
 .student-list{}
 
   .student-item{
